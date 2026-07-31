@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Element Screenshot テストページ</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: -apple-system, 'Hiragino Sans', sans-serif;
+        background: #eef1f5;
+      }
+      h1 {
+        font-size: 18px;
+      }
+      .preview-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-width: 520px;
+      }
+      .message-preview-detail-container {
+        padding: 16px;
+        background: #fff;
+        border: 1px solid #d5dae2;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+      .message-preview-detail-container h2 {
+        margin: 0 0 8px;
+        font-size: 15px;
+        color: #1f2328;
+      }
+      .message-preview-detail-container p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.7;
+        color: #57606a;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        margin-bottom: 8px;
+        font-size: 11px;
+        color: #fff;
+        background: #0969da;
+        border-radius: 999px;
+      }
+      .nested .message-preview-detail-container {
+        border-color: #ffb3ab;
+      }
+      .spacer {
+        height: 900px;
+      }
+
+      /* --- 非表示のパターン --- */
+      .hidden-one {
+        display: none;
+      }
+      .invisible-one {
+        visibility: hidden;
+      }
+
+      /* --- background-image のパターン --- */
+      .bg-inline {
+        min-height: 90px;
+        background-image: linear-gradient(135deg, #0969da 0%, #1f883d 100%);
+        background-size: cover;
+        color: #fff;
+      }
+      .bg-inline h2,
+      .bg-inline p {
+        color: #fff;
+      }
+      .bg-svg {
+        min-height: 90px;
+        /* data URL の背景（CORS の影響を受けない） */
+        background-image: url('data:image/svg+xml;utf8,\
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60">\
+<rect width="60" height="60" fill="%23fff8c5"/>\
+<circle cx="30" cy="30" r="18" fill="%23f0b429"/></svg>');
+        background-repeat: repeat;
+      }
+      .bg-pseudo::before {
+        content: '';
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        margin-right: 8px;
+        vertical-align: middle;
+        background-image: url('data:image/svg+xml;utf8,\
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">\
+<rect width="32" height="32" rx="8" fill="%231f883d"/></svg>');
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Element Screenshot テストページ</h1>
+    <p style="font-size: 13px; color: #57606a">
+      親 <code>.preview-container</code> / 子 <code>.message-preview-detail-container</code>。<br />
+      直下のみ ON なら <strong>8 件</strong>（うち非表示 2 件）、OFF なら <strong>10 件</strong>（うち非表示
+      3 件）がヒットします。
+    </p>
+
+    <div class="preview-container">
+      <div class="message-preview-detail-container">
+        <span class="badge">1</span>
+        <h2>最初のメッセージ</h2>
+        <p>これは1件目のプレビュー詳細です。画面内に表示されている状態で撮影されます。</p>
+      </div>
+
+      <div class="message-preview-detail-container">
+        <span class="badge">2</span>
+        <h2>2件目のメッセージ</h2>
+        <p>
+          長めの本文が入るケースです。折り返しが発生しても要素全体が1枚の画像として保存されることを確認してください。
+        </p>
+      </div>
+
+      <div class="message-preview-detail-container bg-inline">
+        <span class="badge">3</span>
+        <h2>グラデーション背景</h2>
+        <p>CSS グラデーションが再現されるか確認します。</p>
+      </div>
+
+      <div class="message-preview-detail-container bg-svg">
+        <span class="badge">4</span>
+        <h2>background-image（data URL）</h2>
+        <p>背景画像が撮影されるか確認します。</p>
+      </div>
+
+      <div class="message-preview-detail-container bg-pseudo">
+        <span class="badge">5</span>
+        <h2>疑似要素の背景画像</h2>
+        <p>::before の background-image が撮影されるか確認します。</p>
+      </div>
+
+      <div class="message-preview-detail-container hidden-one">
+        <h2>display:none の要素</h2>
+        <p>「非表示の要素も撮影する」が ON のときだけ撮影されます。</p>
+      </div>
+
+      <div class="message-preview-detail-container invisible-one">
+        <h2>visibility:hidden の要素</h2>
+        <p>これも ON のときだけ撮影されます。</p>
+      </div>
+
+      <div class="nested">
+        <div class="message-preview-detail-container">
+          <span class="badge">孫</span>
+          <h2>孫要素（直下ではない）</h2>
+          <p>「直下の子要素のみ」を OFF にしたときだけヒットします。</p>
+        </div>
+      </div>
+
+      <div class="hidden-one">
+        <div class="message-preview-detail-container">
+          <h2>親が display:none の孫要素</h2>
+          <p>祖先ごと表示状態に戻して撮影できるかの確認用です。</p>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="message-preview-detail-container">
+        <span class="badge">6</span>
+        <h2>スクロールしないと見えない要素</h2>
+        <p>画面外にある要素もまとめて保存されることを確認してください。</p>
+      </div>
+    </div>
+  </body>
+</html>

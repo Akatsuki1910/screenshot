@@ -1,0 +1,22 @@
+{
+  "name": "element-screenshot",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "指定した CSS セレクタに一致する全要素のスクリーンショットを保存する Chrome 拡張機能",
+  "scripts": {
+    "build": "node scripts/clean.mjs && vite build && vite build -c vite.config.content.ts && vite build -c vite.config.background.ts",
+    "watch": "node scripts/watch.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.2",
+    "@types/node": "^26.1.2",
+    "sass": "^1.102.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.0"
+  }
+}

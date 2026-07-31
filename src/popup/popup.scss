@@ -1,0 +1,264 @@
+@use 'sass:color';
+@use 'sass:map';
+
+// ---------- トークン ----------
+
+$font-stack: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI',
+  sans-serif;
+$font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+$fg: #1f2328;
+$fg-muted: #57606a;
+$fg-subtle: #8c959f;
+$border: #d0d7de;
+$surface: #f6f8fa;
+$accent: #0969da;
+$primary: #1f883d;
+
+$radius: 6px;
+$width: 340px;
+
+$states: (
+  ok: (
+    fg: #0a5c2e,
+    bg: #dafbe1,
+    border: #a6e5b8
+  ),
+  zero: (
+    fg: #7d4e00,
+    bg: #fff8c5,
+    border: #eedc8c
+  ),
+  error: (
+    fg: #a40e26,
+    bg: #ffebe9,
+    border: #ffb3ab
+  )
+);
+
+// ---------- ミックスイン ----------
+
+@mixin field-control {
+  width: 100%;
+  padding: 6px 8px;
+  font-family: $font-mono;
+  font-size: 12px;
+  color: $fg;
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: $radius;
+
+  &:focus {
+    outline: none;
+    border-color: $accent;
+    box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.15);
+  }
+}
+
+// ---------- ベース ----------
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: $width;
+  margin: 0;
+  padding: 14px;
+  font-family: $font-stack;
+  font-size: 13px;
+  color: $fg;
+  background: #fff;
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+// ---------- フォーム ----------
+
+.field {
+  margin-bottom: 10px;
+
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: $fg-muted;
+  }
+
+  input[type='text'],
+  select {
+    @include field-control;
+  }
+
+  &--inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    label {
+      flex: 0 0 72px;
+      margin: 0;
+    }
+  }
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: $fg-muted;
+  cursor: pointer;
+
+  input {
+    margin: 0;
+  }
+}
+
+// ---------- セレクタのプレビュー ----------
+
+.selector-preview {
+  padding: 7px 9px;
+  margin: 10px 0;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+
+  &__label {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: $fg-subtle;
+  }
+
+  code {
+    font-family: $font-mono;
+    font-size: 11px;
+    color: #0550ae;
+    word-break: break-all;
+  }
+}
+
+// ---------- 結果表示 ----------
+
+.result {
+  padding: 9px 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: $radius;
+
+  &--idle {
+    font-weight: 400;
+    color: $fg-muted;
+    background: $surface;
+    border-color: $border;
+  }
+
+  @each $name, $colors in $states {
+    &--#{$name} {
+      color: map.get($colors, fg);
+      background: map.get($colors, bg);
+      border-color: map.get($colors, border);
+    }
+  }
+
+  &--error {
+    font-weight: 400;
+  }
+}
+
+// ---------- 詳細オプション ----------
+
+details {
+  margin-bottom: 12px;
+  font-size: 12px;
+
+  summary {
+    color: $fg-muted;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .options-body {
+    padding-top: 10px;
+  }
+}
+
+// ---------- ボタン ----------
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn {
+  flex: 1;
+  padding: 7px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: $radius;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--ghost {
+    color: $fg;
+    background: $surface;
+    border: 1px solid $border;
+
+    &:hover:not(:disabled) {
+      background: color.adjust($surface, $lightness: -4%);
+    }
+  }
+
+  &--primary {
+    flex: 1.3;
+    color: #fff;
+    background: $primary;
+    border: 1px solid rgba(31, 35, 40, 0.15);
+
+    &:hover:not(:disabled) {
+      background: color.adjust($primary, $lightness: -3%);
+    }
+  }
+}
+
+// ---------- 進捗 ----------
+
+.progress {
+  margin-top: 12px;
+
+  &__bar {
+    height: 5px;
+    overflow: hidden;
+    background: #eaeef2;
+    border-radius: 3px;
+  }
+
+  &__fill {
+    width: 0;
+    height: 100%;
+    background: $primary;
+    transition: width 0.15s;
+  }
+
+  &__text {
+    margin-top: 5px;
+    font-size: 11px;
+    color: $fg-muted;
+  }
+}
