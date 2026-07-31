@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Element Screenshot — ダウンロード</title>
+    <meta
+      name="description"
+      content="指定した CSS セレクタに一致する全ての要素のスクリーンショットを保存する Chrome 拡張機能"
+    />
+    <style>
+      :root {
+        --fg: #1f2328;
+        --fg-muted: #59636e;
+        --bg: #ffffff;
+        --surface: #f6f8fa;
+        --border: #d1d9e0;
+        --accent: #0969da;
+        --primary: #1f883d;
+        --code: #0550ae;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #f0f6fc;
+          --fg-muted: #9198a1;
+          --bg: #0d1117;
+          --surface: #151b23;
+          --border: #3d444d;
+          --accent: #4493f8;
+          --primary: #2ea043;
+          --code: #79c0ff;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI', sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--fg);
+        background: var(--bg);
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: -0.01em;
+      }
+
+      .lead {
+        margin: 0 0 32px;
+        color: var(--fg-muted);
+      }
+
+      h2 {
+        margin: 40px 0 12px;
+        font-size: 17px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .download {
+        padding: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+
+      .download__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 22px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        text-decoration: none;
+        background: var(--primary);
+        border-radius: 8px;
+        transition: filter 0.15s;
+      }
+
+      .download__btn:hover {
+        filter: brightness(1.1);
+      }
+
+      .download__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 20px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--fg-muted);
+      }
+
+      .download__meta code {
+        color: var(--code);
+      }
+
+      ol {
+        padding-left: 22px;
+      }
+
+      li {
+        margin-bottom: 6px;
+      }
+
+      code {
+        padding: 2px 5px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.88em;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+      }
+
+      .note {
+        padding: 12px 14px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--fg-muted);
+        background: var(--surface);
+        border-left: 3px solid var(--border);
+        border-radius: 0 6px 6px 0;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      footer {
+        margin-top: 48px;
+        padding-top: 20px;
+        font-size: 13px;
+        color: var(--fg-muted);
+        border-top: 1px solid var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Element Screenshot</h1>
+    <p class="lead">
+      指定した CSS セレクタに一致する<strong>全ての要素</strong>のスクリーンショットを撮影して保存する
+      Chrome 拡張機能です。
+    </p>
+
+    <div class="download">
+      <a class="download__btn" href="./element-screenshot.zip" download>
+        ⬇ ダウンロード（zip）
+      </a>
+      <div class="download__meta">
+        <span>バージョン <code>{{VERSION}}</code></span>
+        <span>コミット <code>{{COMMIT}}</code></span>
+        <span>ビルド日時 {{DATE}}</span>
+        <span>{{SIZE}}</span>
+      </div>
+    </div>
+
+    <h2>インストール手順</h2>
+    <ol>
+      <li>上のボタンから zip をダウンロードして、任意の場所に展開する</li>
+      <li>Chrome で <code>chrome://extensions</code> を開く</li>
+      <li>右上の<strong>デベロッパーモード</strong>をオンにする</li>
+      <li><strong>パッケージ化されていない拡張機能を読み込む</strong>をクリック</li>
+      <li>展開したフォルダを選択する</li>
+    </ol>
+    <div class="note">
+      zip の中身がそのまま拡張機能です。展開したフォルダは読み込んだあとも削除しないでください。Chrome
+      109 以上が必要です。
+    </div>
+
+    <h2>使い方</h2>
+    <ol>
+      <li>撮影したいページを開いて、ツールバーの拡張機能アイコンをクリック</li>
+      <li>親セレクタと子セレクタを入力すると、該当する要素の件数が表示される</li>
+      <li>1 件以上あれば<strong>保存</strong>ボタンが有効になり、押すと連番の画像が保存される</li>
+    </ol>
+    <p>
+      非表示の要素も撮影できます。別ドメインの背景画像が空白になる場合は、詳細オプションの「別ドメインの画像も取り込む」をオンにしてください。
+    </p>
+
+    <footer>
+      <a href="{{REPO_URL}}">GitHub リポジトリ</a> ・
+      <a href="{{REPO_URL}}#readme">README</a>
+      <br />
+      このページは main ブランチへのマージごとに自動更新されます。
+    </footer>
+  </body>
+</html>

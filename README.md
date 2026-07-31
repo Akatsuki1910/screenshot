@@ -1,8 +1,25 @@
 # Element Screenshot
 
+[![CI](https://github.com/Akatsuki1910/screenshot/actions/workflows/ci.yml/badge.svg)](https://github.com/Akatsuki1910/screenshot/actions/workflows/ci.yml)
+[![Deploy](https://github.com/Akatsuki1910/screenshot/actions/workflows/deploy.yml/badge.svg)](https://github.com/Akatsuki1910/screenshot/actions/workflows/deploy.yml)
+[![Download](https://img.shields.io/badge/download-latest%20build-1f883d)](https://akatsuki1910.github.io/screenshot/)
+[![Chrome](https://img.shields.io/badge/Chrome-109%2B-4285F4?logo=googlechrome&logoColor=white)](https://www.google.com/chrome/)
+
 指定した CSS セレクタに一致する **全ての要素** のスクリーンショットを撮影し、連番の画像として保存する Chrome 拡張機能です。
 
 デフォルトは `.preview-container > .message-preview-detail-container` ですが、セレクタは自由に変更できます。
+
+## ダウンロード
+
+ビルド済みの zip を配布ページから取得できます。main へマージするたびに自動更新されます。
+
+**→ [https://akatsuki1910.github.io/screenshot/](https://akatsuki1910.github.io/screenshot/)**
+
+1. zip をダウンロードして展開する
+2. Chrome で `chrome://extensions` を開き、**デベロッパーモード** をオンにする
+3. **パッケージ化されていない拡張機能を読み込む** から展開したフォルダを選択
+
+自分でビルドする場合は下記へ。
 
 ## セットアップ
 
@@ -23,6 +40,8 @@ npm run build
 ```bash
 npm run watch      # 3 つの vite build --watch を並列起動
 npm run typecheck  # tsc --noEmit
+npm run verify     # dist/ の健全性チェック（CI と同じもの）
+npm run build:site # 配布ページ + zip を _site/ に生成
 ```
 
 `dist/` を更新したら、`chrome://extensions` で拡張機能の再読み込みボタンを押してください。
@@ -100,9 +119,23 @@ html2canvas はページを clone してから描画するため、**clone の�
 
 `test/sample.html` をブラウザで開いて試せます。デフォルトのセレクタで、直下ON なら 8 件（うち非表示 2 件）、OFF なら 10 件（うち非表示 3 件）がヒットします。グラデーション背景・`background-image`・疑似要素の背景画像のサンプルも含まれています。
 
+## CI / デプロイ
+
+| ワークフロー | 実行タイミング | 内容 |
+| --- | --- | --- |
+| `ci.yml` | 全ブランチへの push・PR | typecheck → build → dist 検証 → 成果物を artifact にアップロード |
+| `deploy.yml` | main への push・手動実行 | typecheck → build → dist 検証 → zip 化 → GitHub Pages にデプロイ |
+
+`scripts/verify-dist.mjs` が、manifest の参照切れ・content script への ESM 混入・html2canvas の同梱漏れ・絶対パス参照・バージョン不一致を検査します。壊れたビルドは公開されません。
+
+> **初回のみ必要な設定**
+> リポジトリの Settings → Pages → **Build and deployment → Source** を **GitHub Actions** に変更してください。これをしないと `deploy.yml` が失敗します。
+
 ## 構成
 
 ```
+.github/workflows/            CI とデプロイ
+site/index.html               配布ページのテンプレート
 popup.html / offscreen.html   拡張機能ページのエントリ
 public/
   manifest.json               MV3 マニフェスト
@@ -116,6 +149,11 @@ src/
   background/main.ts          service worker。保存と画像取得
   offscreen/main.ts           大きな画像用の blob URL 生成
   shared/                     型とファイル名サニタイズ
+scripts/
+  clean.mjs                   dist/ の削除
+  watch.mjs                   3 つの vite watch を並列起動
+  verify-dist.mjs             ビルド成果物の検証
+  build-site.mjs              zip + 配布ページを _site/ に生成
 vite.config.ts                popup / offscreen（ESM）
 vite.config.content.ts        content script（IIFE 単一ファイル）
 vite.config.background.ts     service worker（IIFE 単一ファイル）
