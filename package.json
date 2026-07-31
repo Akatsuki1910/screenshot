@@ -6,8 +6,10 @@
   "description": "指定した CSS セレクタに一致する全要素のスクリーンショットを保存する Chrome 拡張機能",
   "scripts": {
     "build": "node scripts/clean.mjs && vite build && vite build -c vite.config.content.ts && vite build -c vite.config.background.ts",
+    "build:site": "node scripts/build-site.mjs",
     "watch": "node scripts/watch.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify-dist.mjs"
   },
   "dependencies": {
     "html2canvas": "^1.4.1"
@@ -18,5 +20,10 @@
     "sass": "^1.102.0",
     "typescript": "^7.0.2",
     "vite": "^8.2.0"
+  },
+  "homepage": "https://akatsuki1910.github.io/screenshot/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Akatsuki1910/screenshot.git"
   }
 }
