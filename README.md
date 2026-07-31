@@ -144,8 +144,18 @@ Actions がビルドして Pages を更新し、既存ユーザーの拡張機�
 | --- | --- | --- |
 | `ci.yml` | 全ブランチへの push・PR | typecheck → build → dist 検証 → 成果物を artifact にアップロード |
 | `deploy.yml` | main への push・手動実行 | typecheck → build → dist 検証 → zip 化 → GitHub Pages にデプロイ |
+| `dependabot-auto-merge.yml` | Dependabot の PR | メジャー以外の更新に auto-merge を設定 |
 
 依存関係は Dependabot が更新します（`.github/dependabot.yml`）。npm は毎日・production / development でグループ化、GitHub Actions は毎週まとめて 1 PR。PR には `ci.yml` が走るので、ビルドが通るかは自動で確認されます。
+
+メジャー更新は破壊的変更を含みうるため auto-merge の対象外にしています（main へのマージ＝Pages への公開になるため）。全部自動でよければ `dependabot-auto-merge.yml` の `if: ${{ !contains(...) }}` の行を消してください。
+
+> **auto-merge に必要な設定**
+>
+> 1. Settings → General → Pull Requests → **Allow auto-merge** をオンにする（オフだと `gh pr merge --auto` が失敗します）
+> 2. Settings → Branches で main のブランチ保護ルールを作り、**Require status checks to pass** に `Typecheck & Build` を指定する
+>
+> 2 を設定しないと auto-merge は CI の完了を待たずに即マージされます。壊れた依存更新がそのまま公開されてしまうので、必ず設定してください。
 
 `scripts/verify-dist.mjs` が、manifest の参照切れ・content script への ESM 混入・html2canvas の同梱漏れ・絶対パス参照・バージョン不一致・更新チェック URL の埋め込み漏れを検査します。壊れたビルドは公開されません。
 

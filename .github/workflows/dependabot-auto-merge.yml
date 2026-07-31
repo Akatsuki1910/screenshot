@@ -1,0 +1,30 @@
+name: Dependabot auto-merge
+
+# Dependabot の PR は pull_request では読み取り専用トークンしか渡らないため
+# pull_request_target を使う。PR のコードは checkout しないこと（書き込み権限を持つため）。
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+
+      # メジャー更新は破壊的変更を含みうるので手動レビューに回す。
+      # main へのマージは GitHub Pages への公開を意味するため慎重にしている。
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{ !contains(steps.metadata.outputs.update-type, 'major') }}
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
