@@ -5,6 +5,8 @@
 // 大きな画像で失敗する。そこで offscreen document で blob: URL に変換してから渡す。
 
 import { sanitizeFilename } from '../shared/filename';
+import { checkForUpdate, ensureUpdateAlarm, restoreBadge } from './update';
+import { CHECK_ALARM_NAME, type CheckUpdateMessage, type CheckUpdateResponse } from '../shared/update';
 import type {
   BackgroundMessage,
   DownloadImageResponse,
@@ -172,14 +174,44 @@ async function fetchImages(urls: unknown): Promise<Record<string, string>> {
   return images;
 }
 
+// ---------- 更新チェック ----------
+
+chrome.runtime.onInstalled.addListener(() => {
+  void ensureUpdateAlarm();
+  void checkForUpdate(true);
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  void ensureUpdateAlarm();
+  void restoreBadge();
+  void checkForUpdate();
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === CHECK_ALARM_NAME) void checkForUpdate(true);
+});
+
+// service worker が終了から復帰したときにバッジを戻す。
+// 拡張機能の無効化→有効化では onInstalled も onStartup も発火しないので、
+// アラームの復元もここで行う（ensureUpdateAlarm は冪等）。
+void restoreBadge();
+void ensureUpdateAlarm();
+
 // ---------- メッセージ ----------
 
 chrome.runtime.onMessage.addListener(
   (
-    msg: BackgroundMessage,
+    msg: BackgroundMessage | CheckUpdateMessage,
     _sender,
-    sendResponse: (r: DownloadImageResponse | FetchImagesResponse) => void
+    sendResponse: (r: DownloadImageResponse | FetchImagesResponse | CheckUpdateResponse) => void
   ) => {
+    if (msg?.type === 'CHECK_UPDATE') {
+      checkForUpdate(msg.force ?? false)
+        .then((state) => sendResponse({ ok: true, state }))
+        .catch((e: Error) => sendResponse({ ok: false, error: e?.message ?? String(e) }));
+      return true;
+    }
+
     if (msg?.type === 'DOWNLOAD_IMAGE') {
       saveImage(msg.dataUrl, msg.filename)
         .then((downloadId) => sendResponse({ ok: true, downloadId }))

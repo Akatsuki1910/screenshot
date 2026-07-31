@@ -7,6 +7,15 @@
   <body>
     <h1>Element Screenshot</h1>
 
+    <div id="updateBanner" class="update" hidden>
+      <span class="update__icon" aria-hidden="true">✨</span>
+      <div class="update__body">
+        <strong id="updateTitle">新しいバージョンがあります</strong>
+        <span id="updateDetail" class="update__detail"></span>
+      </div>
+      <a id="updateLink" class="update__link" href="#" target="_blank" rel="noreferrer">開く</a>
+    </div>
+
     <div class="field">
       <label for="parentSelector">親セレクタ</label>
       <input id="parentSelector" type="text" spellcheck="false" placeholder=".preview-container" />
@@ -93,6 +102,11 @@
       <div class="progress__bar"><div id="progressFill" class="progress__fill"></div></div>
       <div id="progressText" class="progress__text"></div>
     </div>
+
+    <footer class="footer">
+      <span id="currentVersion"></span>
+      <button id="checkUpdateBtn" class="linkbtn" type="button">更新を確認</button>
+    </footer>
 
     <script type="module" src="/src/popup/main.ts"></script>
   </body>

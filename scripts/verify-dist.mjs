@@ -52,13 +52,31 @@ const popup = readFileSync(join(dist, 'popup.html'), 'utf8');
 check('popup.html が相対パスで assets を参照している', /src="\.\/assets\//.test(popup));
 check('popup.html が絶対パスを含まない', !/(src|href)="\//.test(popup));
 
-// 5. バージョンが package.json と一致しているか
+// 5. バージョンが package.json と一致しているか（更新チェックの比較対象になる）
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 check(
   `manifest.json と package.json のバージョンが一致 (${manifest.version})`,
   manifest.version === pkg.version,
   `manifest=${manifest.version} package=${pkg.version}`
 );
+
+// 6. 更新チェックの配布元 URL がビルド時に埋め込まれているか
+const homepage = String(pkg.homepage ?? '').replace(/\/*$/, '/');
+check('package.json に homepage がある', homepage.startsWith('http'));
+
+const popupJs = readFileSync(
+  join(dist, 'assets', 'popup.js'),
+  'utf8'
+);
+const background = readFileSync(join(dist, 'background.js'), 'utf8');
+check('popup に配布元 URL が埋め込まれている', popupJs.includes(homepage));
+check('service worker に version.json の URL が埋め込まれている', background.includes(`${homepage}version.json`));
+check('__UPDATE_BASE_URL__ が未置換のまま残っていない', !`${popupJs}${background}`.includes('__UPDATE_BASE_URL__'));
+
+// 7. 更新チェックに必要な権限が宣言されているか
+for (const permission of ['alarms', 'storage']) {
+  check(`permissions に ${permission} がある`, manifest.permissions.includes(permission));
+}
 
 if (errors.length > 0) {
   console.error(`\n${errors.length} 件の問題:\n- ${errors.join('\n- ')}`);

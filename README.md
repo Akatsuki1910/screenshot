@@ -46,6 +46,18 @@ npm run build:site # 配布ページ + zip を _site/ に生成
 
 `dist/` を更新したら、`chrome://extensions` で拡張機能の再読み込みボタンを押してください。
 
+## 更新のお知らせ
+
+新しいバージョンが公開されると、拡張機能側が気づいて知らせます。
+
+- ツールバーのアイコンに **NEW** バッジが付く
+- ポップアップの上部に「新しいバージョン x.y.z があります」と表示され、配布ページへのリンクが出る
+- ポップアップ下部の **更新を確認** で手動チェックもできる
+
+配布ページに一緒に置いてある [`version.json`](https://akatsuki1910.github.io/screenshot/version.json) を、6 時間ごと（`chrome.alarms`）とポップアップを開いたとき（前回から 1 時間以上経っていれば）に見に行きます。GitHub Pages は `Access-Control-Allow-Origin: *` を返すため、このチェックのために追加のホスト権限は要りません（`alarms` 権限のみ追加）。
+
+Chrome ウェブストア外の拡張機能は自動更新されないので、更新は zip を落として入れ直す形になります。
+
 ## 使い方
 
 1. 撮影したいページを開く
@@ -119,6 +131,13 @@ html2canvas はページを clone してから描画するため、**clone の�
 
 `test/sample.html` をブラウザで開いて試せます。デフォルトのセレクタで、直下ON なら 8 件（うち非表示 2 件）、OFF なら 10 件（うち非表示 3 件）がヒットします。グラデーション背景・`background-image`・疑似要素の背景画像のサンプルも含まれています。
 
+## リリース手順
+
+1. `package.json` の `version` を上げる（**ここだけでOK**。`public/manifest.json` はビルド時に自動同期されます）
+2. main にマージする
+
+Actions がビルドして Pages を更新し、既存ユーザーの拡張機能が次のチェックで気づきます。
+
 ## CI / デプロイ
 
 | ワークフロー | 実行タイミング | 内容 |
@@ -126,7 +145,9 @@ html2canvas はページを clone してから描画するため、**clone の�
 | `ci.yml` | 全ブランチへの push・PR | typecheck → build → dist 検証 → 成果物を artifact にアップロード |
 | `deploy.yml` | main への push・手動実行 | typecheck → build → dist 検証 → zip 化 → GitHub Pages にデプロイ |
 
-`scripts/verify-dist.mjs` が、manifest の参照切れ・content script への ESM 混入・html2canvas の同梱漏れ・絶対パス参照・バージョン不一致を検査します。壊れたビルドは公開されません。
+依存関係は Dependabot が更新します（`.github/dependabot.yml`）。npm は毎日・production / development でグループ化、GitHub Actions は毎週まとめて 1 PR。PR には `ci.yml` が走るので、ビルドが通るかは自動で確認されます。
+
+`scripts/verify-dist.mjs` が、manifest の参照切れ・content script への ESM 混入・html2canvas の同梱漏れ・絶対パス参照・バージョン不一致・更新チェック URL の埋め込み漏れを検査します。壊れたビルドは公開されません。
 
 > **初回のみ必要な設定**
 > リポジトリの Settings → Pages → **Build and deployment → Source** を **GitHub Actions** に変更してください。これをしないと `deploy.yml` が失敗します。
@@ -138,7 +159,7 @@ html2canvas はページを clone してから描画するため、**clone の�
 site/index.html               配布ページのテンプレート
 popup.html / offscreen.html   拡張機能ページのエントリ
 public/
-  manifest.json               MV3 マニフェスト
+  manifest.json               MV3 マニフェスト（version は自動同期）
   icons/
 src/
   popup/main.ts               UI・件数カウント・保存の起点
@@ -146,17 +167,20 @@ src/
   content/main.ts             ページに注入。カウント / ハイライト / 撮影
   content/reveal.ts           非表示要素を clone 内で復帰させる
   content/inline-images.ts    別ドメイン画像の data URL 化
-  background/main.ts          service worker。保存と画像取得
+  background/main.ts          service worker。保存・画像取得・更新チェックの起点
+  background/update.ts        version.json の取得とバッジ表示
   offscreen/main.ts           大きな画像用の blob URL 生成
-  shared/                     型とファイル名サニタイズ
+  shared/                     型・ファイル名サニタイズ・バージョン比較
 scripts/
   clean.mjs                   dist/ の削除
+  sync-version.mjs            package.json → manifest.json のバージョン同期
   watch.mjs                   3 つの vite watch を並列起動
   verify-dist.mjs             ビルド成果物の検証
-  build-site.mjs              zip + 配布ページを _site/ に生成
+  build-site.mjs              zip + version.json + 配布ページを _site/ に生成
 vite.config.ts                popup / offscreen（ESM）
 vite.config.content.ts        content script（IIFE 単一ファイル）
 vite.config.background.ts     service worker（IIFE 単一ファイル）
+vite.shared.ts                配布元 URL の注入など共通設定
 test/sample.html              動作確認用ページ
 ```
 
@@ -164,6 +188,7 @@ test/sample.html              動作確認用ページ
 
 - content script は `chrome.scripting.executeScript({ files })` で注入するため ESM が使えず、html2canvas ごと 1 ファイルの IIFE にバンドルしています。注入前に必ずバージョンを probe して、二重注入とコストを避けています。
 - 常時アクセス権（`host_permissions`）は要求しません。通常は `activeTab` のみ、外部画像の取り込みだけ `optional_host_permissions` で必要時にリクエストします。
+- 更新チェックの配布元 URL は `package.json` の `homepage` からビルド時に注入されます（`vite.shared.ts` の `define`）。ソースにハードコードされた URL はありません。
 - `chrome.downloads` には URL 長 約 2MB の制限があるため、大きな画像は offscreen document で `blob:` URL に変換してから渡します。
 - ファイル名は content script 側と service worker 側の両方でサニタイズし、ダウンロードフォルダ外への書き込みを防いでいます。
 

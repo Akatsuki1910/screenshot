@@ -28,6 +28,7 @@
     "src",
     "vite.config.ts",
     "vite.config.content.ts",
-    "vite.config.background.ts"
+    "vite.config.background.ts",
+    "vite.shared.ts"
   ]
 }

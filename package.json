@@ -5,7 +5,7 @@
   "type": "module",
   "description": "指定した CSS セレクタに一致する全要素のスクリーンショットを保存する Chrome 拡張機能",
   "scripts": {
-    "build": "node scripts/clean.mjs && vite build && vite build -c vite.config.content.ts && vite build -c vite.config.background.ts",
+    "build": "node scripts/clean.mjs && node scripts/sync-version.mjs && vite build && vite build -c vite.config.content.ts && vite build -c vite.config.background.ts",
     "build:site": "node scripts/build-site.mjs",
     "watch": "node scripts/watch.mjs",
     "typecheck": "tsc --noEmit",

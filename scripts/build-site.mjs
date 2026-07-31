@@ -1,7 +1,8 @@
 /**
  * GitHub Pages 用の配布サイトを _site/ に生成する。
- *   _site/index.html            site/index.html にビルド情報を埋め込んだもの
+ *   _site/index.html              site/index.html にビルド情報を埋め込んだもの
  *   _site/element-screenshot.zip  dist/ の中身を固めた zip（展開してそのまま読み込める）
+ *   _site/version.json            拡張機能の更新チェック用
  */
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -40,13 +41,47 @@ const repoUrl =
     ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}`
     : git(['remote', 'get-url', 'origin'], '').replace(/\.git$/, '') || '#';
 
+const builtAt = new Date();
+const commit = (process.env.GITHUB_SHA ?? git(['rev-parse', 'HEAD'], 'unknown')).slice(0, 7);
+
+// version.json が実際に配る zip の中身と食い違うと、消せない NEW バッジが出続けてしまう。
+// public/ ではなく dist/（= zip に入るもの）を見て確認する。
+const manifest = JSON.parse(readFileSync(join(dist, 'manifest.json'), 'utf8'));
+if (manifest.version !== pkg.version) {
+  console.error(
+    `バージョンが一致しません: dist/manifest.json=${manifest.version} package.json=${pkg.version}\n` +
+      '`npm run build` を実行してから再度お試しください。'
+  );
+  process.exit(1);
+}
+
 const replacements = {
   VERSION: pkg.version,
-  COMMIT: (process.env.GITHUB_SHA ?? git(['rev-parse', 'HEAD'], 'unknown')).slice(0, 7),
-  DATE: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', timeStyle: 'short', dateStyle: 'medium' }),
+  COMMIT: commit,
+  DATE: builtAt.toLocaleString('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    timeStyle: 'short',
+    dateStyle: 'medium'
+  }),
   SIZE: `${(bytes / 1024).toFixed(0)} KB`,
   REPO_URL: repoUrl
 };
+
+// 拡張機能の更新チェックはこれを見に行く
+writeFileSync(
+  join(outDir, 'version.json'),
+  JSON.stringify(
+    {
+      version: pkg.version,
+      commit,
+      builtAt: builtAt.toISOString(),
+      zip: zipName,
+      page: pkg.homepage ?? null
+    },
+    null,
+    2
+  ) + '\n'
+);
 
 let html = readFileSync(join(root, 'site', 'index.html'), 'utf8');
 for (const [key, value] of Object.entries(replacements)) {
@@ -67,4 +102,6 @@ writeFileSync(join(outDir, '.nojekyll'), '');
 // アイコンを favicon 代わりに置いておく
 cpSync(join(dist, 'icons', 'icon128.png'), join(outDir, 'icon.png'));
 
-console.log(`_site/ を生成しました（${zipName}: ${replacements.SIZE}, commit ${replacements.COMMIT}）`);
+console.log(
+  `_site/ を生成しました（v${pkg.version} / ${zipName}: ${replacements.SIZE} / commit ${commit}）`
+);

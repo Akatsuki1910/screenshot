@@ -4,8 +4,17 @@
   "name": "Element Screenshot",
   "version": "1.1.0",
   "description": "指定したセレクタに一致する全ての要素のスクリーンショットを撮影して保存します。",
-  "permissions": ["activeTab", "scripting", "downloads", "storage", "offscreen"],
-  "optional_host_permissions": ["<all_urls>"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads",
+    "storage",
+    "offscreen",
+    "alarms"
+  ],
+  "optional_host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Element Screenshot",

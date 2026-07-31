@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { CHROME_TARGET, sharedDefine } from './vite.shared';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -9,10 +10,11 @@ const root = dirname(fileURLToPath(import.meta.url));
  */
 export default defineConfig({
   publicDir: false,
+  define: sharedDefine,
   build: {
     outDir: 'dist',
     emptyOutDir: false,
-    target: 'chrome109',
+    target: CHROME_TARGET,
     sourcemap: false,
     lib: {
       entry: resolve(root, 'src/background/main.ts'),
