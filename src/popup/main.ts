@@ -7,6 +7,13 @@ import {
   type CountResult,
   type ProgressMessage
 } from '../shared/types';
+import {
+  UPDATE_BASE_URL,
+  hasUpdate,
+  type CheckUpdateMessage,
+  type CheckUpdateResponse,
+  type UpdateState
+} from '../shared/update';
 
 // ---------- 設定 ----------
 
@@ -67,7 +74,13 @@ const el = {
   saveBtn: must<HTMLButtonElement>('saveBtn'),
   progress: must<HTMLElement>('progress'),
   progressFill: must<HTMLElement>('progressFill'),
-  progressText: must<HTMLElement>('progressText')
+  progressText: must<HTMLElement>('progressText'),
+  updateBanner: must<HTMLElement>('updateBanner'),
+  updateTitle: must<HTMLElement>('updateTitle'),
+  updateDetail: must<HTMLElement>('updateDetail'),
+  updateLink: must<HTMLAnchorElement>('updateLink'),
+  currentVersion: must<HTMLElement>('currentVersion'),
+  checkUpdateBtn: must<HTMLButtonElement>('checkUpdateBtn')
 };
 
 let currentCount = 0;
@@ -342,6 +355,62 @@ async function save(): Promise<void> {
   }
 }
 
+// ---------- 更新チェック ----------
+
+function formatBuiltAt(iso: string | null): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('ja-JP', { dateStyle: 'medium' });
+}
+
+function renderUpdate(state: UpdateState | undefined): void {
+  if (!hasUpdate(VERSION, state) || !state?.latest) {
+    el.updateBanner.hidden = true;
+    return;
+  }
+  el.updateTitle.textContent = `新しいバージョン ${state.latest} があります`;
+  const built = formatBuiltAt(state.latestBuiltAt);
+  el.updateDetail.textContent = built
+    ? `お使いのバージョンは ${VERSION} です（${built} ビルド）`
+    : `お使いのバージョンは ${VERSION} です`;
+  el.updateLink.href = UPDATE_BASE_URL;
+  el.updateBanner.hidden = false;
+}
+
+async function requestUpdateCheck(force: boolean): Promise<UpdateState | undefined> {
+  const message: CheckUpdateMessage = { type: 'CHECK_UPDATE', force };
+  const res: CheckUpdateResponse | undefined = await chrome.runtime.sendMessage(message);
+  if (!res?.ok) throw new Error(res?.error ?? '更新の確認に失敗しました');
+  return res.state;
+}
+
+el.checkUpdateBtn.addEventListener('click', () => {
+  el.checkUpdateBtn.disabled = true;
+  el.checkUpdateBtn.textContent = '確認中...';
+
+  requestUpdateCheck(true)
+    .then((state) => {
+      renderUpdate(state);
+      if (state?.error) {
+        el.checkUpdateBtn.textContent = '確認できませんでした';
+      } else if (hasUpdate(VERSION, state)) {
+        el.checkUpdateBtn.textContent = '更新あり';
+      } else {
+        el.checkUpdateBtn.textContent = '最新です';
+      }
+    })
+    .catch(() => {
+      el.checkUpdateBtn.textContent = '確認できませんでした';
+    })
+    .finally(() => {
+      setTimeout(() => {
+        el.checkUpdateBtn.disabled = false;
+        el.checkUpdateBtn.textContent = '更新を確認';
+      }, 2500);
+    });
+});
+
 // ---------- 進捗受信（ポート経由：画像データは popup に流れない） ----------
 
 chrome.runtime.onConnect.addListener((port) => {
@@ -421,10 +490,22 @@ el.saveBtn.addEventListener('click', () => void save());
 // ---------- 初期化 ----------
 
 void (async () => {
+  el.currentVersion.textContent = `v${VERSION}`;
+
+  // count() は content script の注入を伴って時間がかかるので、更新チェックは先に投げて
+  // 結果が出しだい描画する。保存ボタンが使えるようになったあとにバナーが割り込んで
+  // 押し間違える、という事故を避けるため。
+  // オフラインなどで取れなくても黙って諦める（手動の「更新を確認」で理由が出る）
+  const updateRendered = requestUpdateCheck(false)
+    .then(renderUpdate)
+    .catch(() => {});
+
   try {
     await loadSettings();
     await count();
   } catch (e) {
     setResult(`初期化に失敗しました: ${(e as Error).message}`, 'error');
   }
+
+  await updateRendered;
 })();

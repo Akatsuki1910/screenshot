@@ -61,6 +61,11 @@ $states: (
   box-sizing: border-box;
 }
 
+// display を持つコンポーネントが UA の [hidden] を上書きしてしまうため明示する
+[hidden] {
+  display: none !important;
+}
+
 body {
   width: $width;
   margin: 0;
@@ -75,6 +80,86 @@ h1 {
   margin: 0 0 12px;
   font-size: 14px;
   font-weight: 600;
+}
+
+// ---------- 更新のお知らせ ----------
+
+.update {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  margin-bottom: 12px;
+  background: map.get(map.get($states, ok), bg);
+  border: 1px solid map.get(map.get($states, ok), border);
+  border-radius: $radius;
+
+  &__icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: map.get(map.get($states, ok), fg);
+  }
+
+  &__detail {
+    display: block;
+    font-size: 11px;
+    opacity: 0.85;
+  }
+
+  &__link {
+    flex: 0 0 auto;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    background: $primary;
+    border-radius: 5px;
+
+    &:hover {
+      background: color.adjust($primary, $lightness: -3%);
+    }
+  }
+}
+
+// ---------- フッター ----------
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  font-size: 11px;
+  color: $fg-subtle;
+  border-top: 1px solid $border;
+}
+
+.linkbtn {
+  padding: 0;
+  font-family: inherit;
+  font-size: 11px;
+  color: $accent;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    color: $fg-subtle;
+    cursor: default;
+  }
 }
 
 // ---------- フォーム ----------
