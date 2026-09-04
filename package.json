@@ -15,7 +15,7 @@
     "html2canvas": "^1.4.1"
   },
   "devDependencies": {
-    "@types/chrome": "^0.2.7",
+    "@types/chrome": "^0.2.8",
     "@types/node": "^26.4.0",
     "sass": "^1.103.1",
     "typescript": "^7.0.2",
