@@ -16,10 +16,10 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.2.9",
-    "@types/node": "^26.5.0",
+    "@types/node": "^26.5.1",
     "sass": "^1.104.0",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.3.0"
   },
   "homepage": "https://akatsuki1910.github.io/screenshot/",
   "repository": {
