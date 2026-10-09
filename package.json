@@ -19,7 +19,7 @@
     "@types/node": "^26.6.4",
     "sass": "^1.105.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2"
+    "vite": "^8.3.3"
   },
   "homepage": "https://akatsuki1910.github.io/screenshot/",
   "repository": {
